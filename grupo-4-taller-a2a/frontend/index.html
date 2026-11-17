@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat — Agentes Profesores (Historia y Geografía)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #6d28d9;
+      --accent-hover: #7c3aed;
+      --user: #2563eb;
+      --agent: #059669;
+      --error: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 18px; flex: 1; }
+    .config {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .config label { font-size: 12px; color: var(--muted); }
+    .config input, .config select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .config input { width: 220px; }
+    .config select { width: 130px; }
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .msg {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--user);
+      color: #fff;
+    }
+    .msg.agent {
+      align-self: flex-start;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+    .msg.error {
+      align-self: center;
+      background: var(--error);
+      color: #fff;
+      font-size: 13px;
+    }
+    .msg .meta {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+    .composer {
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      gap: 8px;
+    }
+    .composer input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .composer button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .composer button:hover { background: var(--accent-hover); }
+    .composer button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 20px 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎓 Chat — Agentes Profesores</h1>
+    <div class="config">
+      <label>API Key:</label>
+      <input type="password" id="apiKey" placeholder="X-API-Key" value="cambia-esta-clave-en-produccion" />
+      <label>Agente:</label>
+      <select id="agente">
+        <option value="historia">Historia</option>
+        <option value="geografia">Geografía</option>
+      </select>
+      <label>API URL:</label>
+      <input type="text" id="apiUrl" value="" placeholder="http://localhost:8000" />
+    </div>
+  </header>
+  <div id="chat"></div>
+  <div class="status" id="status">Listo. Escribe un mensaje y presiona Enter.</div>
+  <div class="composer">
+    <input type="text" id="input" placeholder="Escribe tu mensaje..." autocomplete="off" />
+    <button id="send">Enviar</button>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const status = document.getElementById('status');
+    const apiKeyInput = document.getElementById('apiKey');
+    const agenteSelect = document.getElementById('agente');
+    const apiUrlInput = document.getElementById('apiUrl');
+
+    function addMessage(role, text, meta = '') {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      if (meta) {
+        const m = document.createElement('div');
+        m.className = 'meta';
+        m.textContent = meta;
+        div.appendChild(m);
+      }
+      const t = document.createElement('div');
+      t.textContent = text;
+      div.appendChild(t);
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const apiKey = apiKeyInput.value.trim();
+      const agente = agenteSelect.value;
+      const apiUrl = (apiUrlInput.value.trim() || window.location.origin).replace(/\/$/, '');
+
+      addMessage('user', text, `Tú → ${agente}`);
+      input.value = '';
+      sendBtn.disabled = true;
+      status.textContent = 'Enviando...';
+
+      try {
+        const resp = await fetch(`${apiUrl}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+          },
+          body: JSON.stringify({ agente, mensaje: text })
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        addMessage('agent', data.respuesta, `${agente} (thread: ${data.thread_id ? data.thread_id.slice(0,8) : 'N/A'}...)`);
+        status.textContent = 'Listo.';
+      } catch (e) {
+        console.error('Fetch error:', e);
+        addMessage('error', `Error: ${e.message}`);
+        status.textContent = 'Error. Verifica la API key y que el servidor esté corriendo.';
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Mensaje de bienvenida
+    addMessage('agent', '¡Hola! Soy el asistente. Elige un agente (Historia o Geografía) y escribe tu pregunta.', 'Sistema');
+  </script>
+</body>
+</html>

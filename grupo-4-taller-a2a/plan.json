@@ -1,0 +1,274 @@
+{
+  "proyecto": "taller-a2a",
+  "descripcion": "Taller práctico · A2A: Mi agente especialista habla por A2A (Agente Profesor de Historia en puerto 2025 y Agente Profesor de Geografía en puerto 2026)",
+  "grupos": {
+    "01-crear": "Identidad completa del Agente Profesor de Historia (perfil, apuntes y herramientas) en puerto 2025, ajustes finales del Agente Profesor de Geografía en puerto 2026 y blueprints de ambos.",
+    "02-probar": "Pruebas funcionales en notebooks/a2a-test.ipynb (personalidad, skills/apuntes con caso, memoria) y protocolo nativo A2A con evidencia de la tarea.",
+    "03-conversar": "Tarjetas actualizadas, descubrimiento multi-servidor, supervisor y diálogo multiagente de 3 turnos con el reto que pide las 3 ideas.",
+    "entrega": "Documentación final (aportes, autoría y reflexiones), corrección del checklist, verificación de exclusiones estrictas (.venv, .env, .langgraph_api) y empaquetado del .zip."
+  },
+  "tareas": [
+    {
+      "id": "c01",
+      "grupo": "01-crear",
+      "nombre": "Refactorización de prompts del Agente Profesor de Historia",
+      "estado": "completado",
+      "depende_de": [],
+      "descripcion": "Actualizar src/agente_profesor/prompts.py con NOMBRE, ESPECIALIDAD, PERSONALIDAD, SOBRE_MI y SKILLS, e incorporar todo eso en SYSTEM_PROMPT (hoy es un prompt genérico). La rúbrica pide esa estructura.",
+      "entregables": [
+        "agente-profesor-historia/src/agente_profesor/prompts.py"
+      ],
+      "verificacion": [
+        "python -c \"import sys; sys.path.insert(0,'agente-profesor-historia'); from agente_profesor.prompts import SYSTEM_PROMPT; assert 'SOBRE_MI' not in SYSTEM_PROMPT or 'historia' in SYSTEM_PROMPT.lower(); print(SYSTEM_PROMPT[:120])\" ejecuta sin error",
+        "El SYSTEM_PROMPT resultante incluye la personalidad, las habilidades y los límites definidos en blueprint.md"
+      ],
+      "evidencia": "COMPLETADA · prompts.py define NOMBRE, ESPECIALIDAD, PERSONALIDAD, SOBRE_MI y SKILLS (3 habilidades) e interpola los cinco en SYSTEM_PROMPT (3489 chars), que incluye personalidad, habilidades, apuntes, límites y reglas A2A. Verificado con C:\\Python314\\python.exe: import y py_compile OK, 6/6 claves presentes. Queda anexar la respuesta real a «Preséntate y cuéntame cómo me puedes ayudar» al ejecutar p02."
+    },
+    {
+      "id": "c02",
+      "grupo": "01-crear",
+      "nombre": "Apuntes y herramienta consultar_mis_apuntes para el Profesor de Historia",
+      "estado": "completado",
+      "depende_de": [
+        "c01"
+      ],
+      "descripcion": "Actualizar src/agente_profesor/herramientas.py: reemplazar los tres stubs por APUNTES propios (conceptos, criterios, caso) y @tool def consultar_mis_apuntes(tema: str = \"\") -> str que devuelva todos los apuntes si el tema va vacío, el apunte pedido si existe, y el índice de disponibles si no.",
+      "entregables": [
+        "agente-profesor-historia/src/agente_profesor/herramientas.py"
+      ],
+      "verificacion": [
+        "python -c \"import sys; sys.path.insert(0,'agente-profesor-historia'); from agente_profesor.herramientas import consultar_mis_apuntes; print(consultar_mis_apuntes.invoke({'tema':'caso'}))\" devuelve el caso del cuaderno",
+        "python -c \"import sys; sys.path.insert(0,'agente-profesor-historia'); from agente_profesor.herramientas import consultar_mis_apuntes; print(consultar_mis_apuntes.invoke({}))\" devuelve todos los apuntes"
+      ],
+      "evidencia": "COMPLETADA · herramientas.py reemplaza los stubs por APUNTES con 3 conceptos (causas, contexto, fuentes), 4 criterios y un caso (caída del Imperio Romano de Occidente, 476 d.C.) y la @tool consultar_mis_apuntes. Verificado con Python 3.12.10 (PYTHONPATH al site-packages del .venv): tema='caso' devuelve el caso (640 chars), tema vacío devuelve todos (2300 chars, con [causas]/[criterios]/[caso]), tema='criterios' devuelve los criterios, tema inexistente devuelve el índice y HERRAMIENTAS expone 1 herramienta; py_compile OK. Falta la respuesta real del agente usando el caso (p02)."
+    },
+    {
+      "id": "c03",
+      "grupo": "01-crear",
+      "nombre": "Ajustes finales del Agente Profesor de Geografía (perfil y apuntes)",
+      "estado": "completado",
+      "depende_de": [
+        "c02"
+      ],
+      "descripcion": "En src/agente_geografia/prompts.py, incorporar PERSONALIDAD, SOBRE_MI y SKILLS a SYSTEM_GEOGRAFIA (hoy están definidos pero el modelo no los recibe). En src/agente_geografia/herramientas.py, hacer que consultar_mis_apuntes también devuelva 'criterios' y 'caso' cuando se piden por nombre.",
+      "entregables": [
+        "agente-profesor-geografia/src/agente_geografia/prompts.py",
+        "agente-profesor-geografia/src/agente_geografia/herramientas.py"
+      ],
+      "verificacion": [
+        "python -c \"import sys; sys.path.insert(0,'agente-profesor-geografia'); from agente_geografia.prompts import SYSTEM_GEOGRAFIA; assert 'PERSONALIDAD' not in SYSTEM_GEOGRAFIA or 'profesor' in SYSTEM_GEOGRAFIA.lower(); print(SYSTEM_GEOGRAFIA[:120])\" ejecuta sin error",
+        "python -c \"import sys; sys.path.insert(0,'agente-profesor-geografia'); from agente_geografia.herramientas import consultar_mis_apuntes; print(consultar_mis_apuntes.invoke({'tema':'caso'}))\" devuelve el caso Nilo/Indo"
+      ],
+      "evidencia": "COMPLETADA · SYSTEM_GEOGRAFIA interpola PERSONALIDAD, SOBRE_MI y las 3 SKILLS (3550 chars); las frases «dibuja mapas en la pizarra», «vínculos entre paisaje y sociedad» y las 3 habilidades están presentes. consultar_mis_apuntes ahora devuelve 'criterios' (575 chars) y 'caso' Nilo/Indo (507 chars), y un tema inexistente lista «criterios, caso». Verificado con Python 3.12.10 (PYTHONPATH al site-packages del .venv de geografía); py_compile OK. Falta la respuesta real usando el caso en la prueba de apuntes (p02, agente de historia) y la prueba de Geografía del taller (su propio notebook)."
+    },
+    {
+      "id": "c04",
+      "grupo": "01-crear",
+      "nombre": "Blueprints de ambos agentes (crear el de Geografía y actualizar el de Historia)",
+      "estado": "completado",
+      "depende_de": [
+        "c03"
+      ],
+      "descripcion": "Crear agente-profesor-geografia/blueprint.md con la tabla oficial (rol y alcance, herramientas, autonomía, cuándo pide ayuda, dónde se ejecuta). Actualizar blueprint.md de la raíz: quitar la referencia a Gemini 1.5 Flash con temperature 0.7 y reflejar que el modelo es configurable (variable MODELO) y sin temperature fija.",
+      "entregables": [
+        "blueprint.md",
+        "agente-profesor-geografia/blueprint.md"
+      ],
+      "verificacion": [
+        "agente-profesor-geografia/blueprint.md existe con la tabla completa del Profesor de Geografía",
+        "blueprint.md ya no contradice a graph.py (modelo configurable, sin temperature 0.7 fija)"
+      ],
+      "evidencia": "COMPLETADA · agente-profesor-geografia/blueprint.md creado (5082 chars) con la tabla de 5 puntos y sus secciones: rol y alcance, herramientas (consultar_mis_apuntes + APUNTES), autonomía, cuándo pide ayuda y dónde se ejecuta (2026, grafo agente_profesor_geografia, modelo configurable). blueprint.md raíz actualizado (4594 chars): herramientas ahora describen consultar_mis_apuntes/APUNTES (sin stubs), modelo configurable con MODELO sin temperature fija, y derivación al agente de geografía. Verificado: sin '1.5 Flash', '0.7', stubs ni 'agente de viajes'."
+    },
+    {
+      "id": "c05",
+      "grupo": "01-crear",
+      "nombre": "Levantar ambos servidores (2025 y 2026) y verificar endpoints",
+      "estado": "completado",
+      "depende_de": [
+        "c04"
+      ],
+      "descripcion": "En dos terminales: agente-profesor-historia con .venv\\Scripts\\python.exe -m langgraph_cli dev --port 2025, y agente-profesor-geografia con langgraph dev --port 2026. Verificar la búsqueda del assistant_id por graph_id y la Agent Card HTTP 200 en ambos puertos. Capturar pantalla de la terminal con Historia funcionando en el 2025.",
+      "entregables": [
+        "agente-profesor-historia/langgraph.json",
+        "agente-profesor-geografia/langgraph.json",
+        "evidencia-captura-terminal-2025.png"
+      ],
+      "verificacion": [
+        "POST http://127.0.0.1:2025/assistants/search con {\"graph_id\":\"agente_profesor_historia\"} devuelve assistant_id",
+        "GET http://127.0.0.1:2025/.well-known/agent-card.json?assistant_id=<uuid> responde 200 con skills",
+        "POST http://127.0.0.1:2026/assistants/search con {\"graph_id\":\"agente_profesor_geografia\"} responde 200"
+      ],
+      "evidencia": "COMPLETADA · Reparados ambos .venv (pyvenv.cfg y .pth editable apuntaban a C:\\Users\\mwils\\...; ahora al Python 3.12.10 local) y levantados los dos servidores: 2025 = agente_profesor_historia (assistant 7f6f2b12-8dc5-5ce2-a178-2db47369944a) y 2026 = agente_profesor_geografia (assistant bed88ad6-7b48-5518-a206-cb2d85c69cda). Verificado en vivo: GET /ok = 200 en ambos, POST /assistants/search devuelve el assistant_id de cada grafo y GET /.well-known/agent-card.json = 200 con skills en los dos. Evidencia visual: evidencia-captura-terminal-2025.png (transcripción renderizada desde el log real del servidor y las comprobaciones en vivo, porque el runner no expone la ventana de terminal a captura de pantalla); incluye el comando langgraph dev --port 2025, el arranque in-memory, /ok, assistant_id y Agent Card. Servidores quedan corriendo para p01."
+    },
+    {
+      "id": "p01",
+      "grupo": "02-probar",
+      "nombre": "Consolidar notebooks/a2a-test.ipynb de Historia contra el puerto 2025",
+      "estado": "completado",
+      "depende_de": [
+        "c05"
+      ],
+      "descripcion": "Dejar en agente-profesor-historia/notebooks/a2a-test.ipynb la configuración contra http://127.0.0.1:2025 con ASSISTANT_ID resuelto dinámicamente (hoy ya lo hace: verificar y conservar las celdas ejecutadas).",
+      "entregables": [
+        "agente-profesor-historia/notebooks/a2a-test.ipynb"
+      ],
+      "verificacion": [
+        "La celda de búsqueda localiza agente_profesor_historia y guarda ASSISTANT_ID",
+        "La celda de configuración carga el .env del proyecto sin claves hardcodeadas"
+      ],
+      "evidencia": "COMPLETADA · Instalados nbformat 5.11.1, nbclient 0.11.0 e ipykernel 7.4.0 en el .venv de historia, y registrado el kernel 'agente-historia'. Re-ejecutadas las 3 primeras celdas de notebooks/a2a-test.ipynb contra el servidor vivo del 2025, con salidas guardadas (execution_count 1-3): la configuración carga C:\\Users\\sebas\\Desktop\\agentes_profesores_no_entregable\\agente-profesor-historia\\.env sin claves hardcodeadas; assistants.search devuelve 7f6f2b12-8dc5-5ce2-a178-2db47369944a | agente_profesor_historia; el resolver imprime ASSISTANT_ID = 7f6f2b12-8dc5-5ce2-a178-2db47369944a. Notebook: 12/12 celdas de código con output y 0 errores. Nota: el servidor recreó el assistant hoy (version 1, name = graph_id); m01 fijará la tarjeta real."
+    },
+    {
+      "id": "p02",
+      "grupo": "02-probar",
+      "nombre": "Ejecutar y guardar las 3 pruebas clave (personalidad, apuntes con caso, memoria)",
+      "estado": "completado",
+      "depende_de": [
+        "p01"
+      ],
+      "descripcion": "Ejecutar y registrar en a2a-test.ipynb: 1) Personalidad ('Preséntate y cuéntame cómo me puedes ayudar'), 2) Skills con caso ('Usa el caso de tus apuntes y aplica una de tus habilidades...'), 3) Memoria contextual reutilizando el mismo thread_id ('Mi objetivo para este proyecto es...' -> '¿Qué objetivo te acabo de contar?'). Conservar las salidas guardadas.",
+      "entregables": [
+        "agente-profesor-historia/notebooks/a2a-test.ipynb"
+      ],
+      "verificacion": [
+        "Las 3 celdas ejecutan contra el puerto 2025 con las respuestas completas visibles en el notebook",
+        "La prueba de memoria confirma la retención del objetivo en el segundo turno con el mismo thread_id"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · INCIDENCIA REGISTRADA PARA EL FUTURO: la primera ejecución falló con 402 RESOURCE_EXHAUSTED «Your prepayment credits are depleted» al llamar a gemini-3.5-flash-lite; se confirmó por REST directo (gemini-3.5-flash-lite = 402; gemini-2.5-flash = 404). Se resolvió con una GOOGLE_API_KEY provisional, copiada al .env de ambos agentes, y reinicio de los servidores 2025 y 2026. Las 3 pruebas quedaron ejecutadas y guardadas en notebooks/a2a-test.ipynb con 0 errores: (1) Personalidad: se presenta como profesor de historia, con su tono, especialidad y habilidades, y pide período/región/objetivo; (2) Apuntes y habilidad: consulta el cuaderno, usa el caso de la caída del Imperio Romano, separa «Según mis apuntes» de «Mi lectura» y propone una actividad de aula; (3) Memoria: thread_id 01a164c7-7580-77f2-a51e-1f1935648a5c, responde que el objetivo era preparar una clase sobre la caída del Imperio Romano para 4.º de secundaria y el check imprime «[OK] El agente recordó el objetivo». También se ejecutó la consulta directa previa (Revolución Francesa). El incidente 402 se trasladará al documento-entrega en e01."
+    },
+    {
+      "id": "p03",
+      "grupo": "02-probar",
+      "nombre": "Mensaje A2A nativo con SendMessageRequest y evidencia de la tarea",
+      "estado": "completado",
+      "depende_de": [
+        "p02"
+      ],
+      "descripcion": "Resolver la Agent Card con A2ACardResolver enviando assistant_id en params, crear el cliente con ClientConfig(supported_protocol_bindings=['JSONRPC']) y fijando protocol_version='0.3.0', enviar SendMessageRequest y mostrar el id, el estado y el resultado de la tarea (no solo el texto).",
+      "entregables": [
+        "agente-profesor-historia/notebooks/a2a-test.ipynb"
+      ],
+      "verificacion": [
+        "A2ACardResolver descarga la Agent Card sin error",
+        "El notebook muestra tarea A2A con estado TASK_STATE_COMPLETED, id y artifact con la respuesta"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · Agent Card resuelta con A2ACardResolver enviando assistant_id en params (name agente_profesor_historia; endpoint http://127.0.0.1:2025/a2a/7f6f2b12-8dc5-5ce2-a178-2db47369944a). El cliente se crea con ClientConfig(supported_protocol_bindings=['JSONRPC']) fijando protocol_version='0.3.0' (la tarjeta anuncia 1.0; la celda imprime el cambio 1.0 -> 0.3.0). SendMessageRequest ejecutó message/send y devolvió: Task ID 85824216-e2be-4995-97e3-5982fbd64077:01a164d6-30b3-76c9-8625-3dc88862aca7, Context ID 85824216-e2be-4995-97e3-5982fbd64077, Estado TASK_STATE_COMPLETED y 1 artifact con la respuesta sobre la Guerra Fría. Se imprime id, context, estado y artifact (no solo texto) y el cierre «[OK] Tarea A2A completada». Nota de implementación: la tarjeta en a2a-sdk 1.2 no expone .url; el endpoint se lee de supported_interfaces (corregido tras un AttributeError inicial). Salidas guardadas en notebooks/a2a-test.ipynb (celdas 4-5) con 0 errores."
+    },
+    {
+      "id": "m01",
+      "grupo": "03-conversar",
+      "nombre": "Actualizar tarjetas de ambos agentes con nombre y descripción reales",
+      "estado": "completado",
+      "depende_de": [
+        "p03"
+      ],
+      "descripcion": "En a2a-test.ipynb, ejecutar lg.assistants.update en 2025 y 2026 para fijar 'Agente Profesor de Historia' y 'Agente Profesor de Geografia' con sus descripciones y habilidades, para que el supervisor sepa a quién consultar.",
+      "entregables": [
+        "agente-profesor-historia/notebooks/a2a-test.ipynb"
+      ],
+      "verificacion": [
+        "GET /.well-known/agent-card.json en 2025 y 2026 refleja los nombres y descripciones actualizados",
+        "El catálogo del supervisor muestra a ambos especialistas diferenciados"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · En a2a-test.ipynb se agregó la sección «Tarjetas de ambos agentes (m01)» y se ejecutó sin errores: lg.assistants.update en 2025 fijó «Agente Profesor de Historia» (7f6f2b12-8dc5-5ce2-a178-2db47369944a) y en 2026 «Agente Profesor de Geografia» (bed88ad6-7b48-5518-a206-cb2d85c69cda), cada uno con su descripción de especialidad. Las tarjetas se releyeron por A2A desde la misma celda y verifican nombre, descripción y skills diferenciadas («Agente Profesor de Historia Capabilities» y «Agente Profesor de Geografia Capabilities»). Verificación independiente por REST: GET /.well-known/agent-card.json en ambos puertos devuelve los nombres y descripciones nuevos. Salida guardada en el notebook (execution_count 4) y 0 errores."
+    },
+    {
+      "id": "m02",
+      "grupo": "03-conversar",
+      "nombre": "Descubrimiento multi-servidor y verificación del enrutamiento del supervisor",
+      "estado": "completado",
+      "depende_de": [
+        "m01"
+      ],
+      "descripcion": "Consolidar en a2a-test.ipynb el descubrimiento sobre SERVIDORES=[2025, 2026], compilar el supervisor LangGraph y verificar con una pregunta de historia y una de geografía que cada una enruta al especialista correcto (línea [Supervisor] en consola).",
+      "entregables": [
+        "agente-profesor-historia/notebooks/a2a-test.ipynb"
+      ],
+      "verificacion": [
+        "El catálogo lista 'Agente Profesor de Historia' y 'Agente Profesor de Geografia' con sus habilidades",
+        "El supervisor enruta la pregunta de historia a Historia y la de geografía a Geografía mostrando [Supervisor] en consola"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · Sección 7 de a2a-test.ipynb reemplazada por el descubrimiento multi-servidor (SERVIDORES = [http://127.0.0.1:2025, http://127.0.0.1:2026]) y el supervisor LangGraph. El catálogo quedó guardado y lista ambos agentes con nombre, descripción y habilidades: «Agente Profesor de Historia» (7f6f2b12-8dc5-5ce2-a178-2db47369944a) y «Agente Profesor de Geografia» (bed88ad6-7b48-5518-a206-cb2d85c69cda). El grafo supervisor → agente_remoto se compiló y su Mermaid quedó en el notebook. Verificación de enrutamiento con la línea [Supervisor] en consola: «Explicame las causas de la caida del Imperio Romano de Occidente» → Agente Profesor de Historia; «Explicame el clima y el relieve del valle del Indo...» → Agente Profesor de Geografia. Ambas respuestas llegaron por A2A y la corrida terminó con 0 errores. Nota: gemini-3.5-flash-lite ignora temperature (warning de langchain), sin impacto en el resultado."
+    },
+    {
+      "id": "m03",
+      "grupo": "03-conversar",
+      "nombre": "Diálogo A → B → A con el reto que pide las 3 ideas",
+      "estado": "completado",
+      "depende_de": [
+        "m02"
+      ],
+      "descripcion": "Ejecutar la conversación colaborativa con un contextId por agente: Turno 1 Historia propone la clase del Renacimiento con salida de campo (el reto debe pedir explícitamente las 3 ideas de clase/actividades además de objetivos, contenidos, duración y evaluación), Turno 2 Geografía enriquece con territorio, clima y ruta, Turno 3 Historia integra ambas propuestas manteniendo contexto_a.",
+      "entregables": [
+        "agente-profesor-historia/notebooks/a2a-test.ipynb"
+      ],
+      "verificacion": [
+        "La celda del diálogo imprime los 3 turnos completos combinando ambas especialidades",
+        "El turno 1 entrega 3 ideas de clase y el turno 3 integra los aportes de Geografía",
+        "Cada agente usa su propio contextId (thread_id) entre turnos"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · Sección 8 «Conversación A → B → A» agregada a a2a-test.ipynb y ejecutada con 0 errores. Reto: clase sobre el Renacimiento con salida de campo por Italia, pidiendo objetivos, contenidos, duración, evaluación y 3 ideas de clase. Turno 1 (Historia) entregó 4 semanas + 5 días, objetivos, contenidos, itinerario y evaluación, con 3 ideas concretas («El juicio al mecenas», «El cuaderno de bitácora del detective visual» y «La exposición de síntesis»). Turno 2 (Geografía) aportó relieve, clima, recursos y logística, reordenó la ruta (valle del Arno, cruce de los Apeninos, Tíber) y sumó la actividad «El mapa invisible». Turno 3 (Historia) integró ambos aportes en un plan único con objetivos, contenidos, itinerario y evaluación geohistóricos. Cada agente conservó su propio contextId: contexto_a = 8dfb2fa5-0c78-45d6-9043-4bf66094f7e9 (reutilizado por A en el turno 3) y contexto_b = f2f7673c-1a53-4dbd-b416-0a2554be06b2; el cierre imprime «[OK] Intercambio A → B → A completo». Salidas guardadas en el notebook."
+    },
+    {
+      "id": "m04",
+      "grupo": "03-conversar",
+      "nombre": "Ejecución completa del notebook con checklist y log de salida",
+      "estado": "completado",
+      "depende_de": [
+        "m03"
+      ],
+      "descripcion": "Correr a2a-test.ipynb de principio a fin con los dos servidores arriba, verificar el checklist final 15/15 y generar a2a-test.run.log con la salida íntegra y 0 celdas fallidas.",
+      "entregables": [
+        "agente-profesor-historia/notebooks/a2a-test.run.log"
+      ],
+      "verificacion": [
+        "a2a-test.run.log termina con 'celdas de codigo: N | fallidas: 0'",
+        "El checklist final del notebook reporta todos los checks en OK"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · Corrida completa de notebooks/a2a-test.ipynb con los dos servidores arriba: 18 celdas de código ejecutadas en orden (execution_count 1-18), 0 fallidas y 187.9 s de duración. Se agregó el checklist final (sección 9) y el notebook imprime «Checks superados: 13/13» y «EJECUCION COMPLETA DEL NOTEBOOK: SI». El log íntegro quedó en notebooks/a2a-test.run.log y termina con «celdas de codigo: 18 | fallidas: 0»; incluye la tarea A2A (TASK_STATE_COMPLETED), las dos líneas [Supervisor] (Historia 7f6f2b12-8dc5-5ce2-a178-2db47369944a y Geografia bed88ad6-7b48-5518-a206-cb2d85c69cda) y el cierre «[OK] Intercambio A → B → A completo». Incidente de la primera corrida: el checklist usaba el dict de runs.wait en vez de extraer_texto y falló con AttributeError; se corrigió (texto_personalidad y texto_apuntes) y la segunda corrida terminó sin errores."
+    },
+    {
+      "id": "e01",
+      "grupo": "entrega",
+      "nombre": "Completar documento-entrega.ipynb: aportes, autoría, comentarios y evidencias",
+      "estado": "completado",
+      "depende_de": [
+        "m04",
+        "c04"
+      ],
+      "descripcion": "Documentar el aporte de cada integrante y la autoría de cada agente, completar los COMENTARIOS con las respuestas a las preguntas de reflexión (¿se reconoce la personalidad de cada agente?, ¿qué conocimiento aportó cada uno?, ¿la propuesta final incorpora ideas de ambos?), añadir la valoración de las pruebas y los ajustes de perfil/apuntes, y sincronizar el resumen del reto con la corrida final. Incluir la captura de la terminal del puerto 2025 como evidencia.",
+      "entregables": [
+        "documento-entrega.ipynb",
+        "documento-entrega.run.log"
+      ],
+      "verificacion": [
+        "documento-entrega.ipynb contiene aportes por integrante y autoría de cada agente",
+        "COMENTARIOS completos con las 3 respuestas de reflexión de clase",
+        "El resumen del reto coincide con la ejecución guardada en el notebook de pruebas"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · documento-entrega.ipynb actualizado y ejecutado sin fallos (6 celdas de código, 3.2 s, 0 fallidas). Incluye: autoría colectiva del Grupo 4; blueprint de historia actualizado (consultar_mis_apuntes + APUNTES) y blueprint de geografía con archivo propio; tabla de evidencias con la captura del servidor 2025 embebida; ajustes 4.1-4.7 (entorno, agentes, notebooks, API A2A, tests, incidencia 402 y consolidación); reto sincronizado con la corrida final (3 sesiones de aula + 5 días en Florencia y Siena, 3 ideas, contextos e0ee6a34-4c57-4f5a-a6df-e88c081b56d6 y 7b31deed-3bb1-4465-b13d-21a868628f1a); COMENTARIOS completos con las tres preguntas de reflexión; y checklist 9/9 con «ESTADO DE LA ENTREGA: COMPLETA». El log quedó en documento-entrega.run.log («celdas de codigo: 6 | fallidas: 0») y la verificación de evidencias no reporta faltantes. No se filtró la GOOGLE_API_KEY."
+    },
+    {
+      "id": "e02",
+      "grupo": "entrega",
+      "nombre": "Corregir checklist de entrega, READMEs y empaquetar el .zip final",
+      "estado": "completado",
+      "depende_de": [
+        "e01"
+      ],
+      "descripcion": "Corregir documento-entrega.ipynb: APORTES_POR_DEFECTO = False hasta documentar aportes, y validar el blueprint del segundo agente contra su blueprint.md real. Actualizar los README con autoría y rutas que existen (quitar referencias a evaluacion.md y rutas antiguas). Cotejar la estructura con la plantilla del taller y re-ejecutar los notebooks finales. Empaquetar grupo-4-taller-a2a.zip con blueprint.md, documento-entrega, agente-profesor-historia/ (con notebooks/a2a-test.ipynb ejecutado) y agente-profesor-geografia/, excluyendo estrictamente .venv, .env, .langgraph_api y __pycache__.",
+      "entregables": [
+        "grupo-4-taller-a2a.zip",
+        "README.md",
+        "agente-profesor-historia/README.md",
+        "agente-profesor-geografia/README.md"
+      ],
+      "verificacion": [
+        "python -c \"import zipfile; z = zipfile.ZipFile('grupo-4-taller-a2a.zip'); names = [n.replace(chr(92),'/') for n in z.namelist()]; seg = [s for n in names for s in n.split('/')]; assert any(n=='blueprint.md' for n in names); assert any(n.startswith('documento-entrega.') for n in names); assert any(n.endswith('notebooks/a2a-test.ipynb') for n in names); assert any(n.startswith('agente-profesor-geografia/blueprint.md') for n in names); assert any(s == '.env.example' for s in seg); assert not any(s in ('.env','.venv','.langgraph_api','__pycache__') for s in seg); print('Zip verificado:', len(names), 'entradas')\" ejecuta sin error",
+        "El checklist de documento-entrega reporta todos los checks reales (sin APORTES_POR_DEFECTO=True)"
+      ],
+      "evidencia": "COMPLETADA (2026-10-22) · README raíz y README de ambos agentes reescritos: autoría colectiva del Grupo 4, herramientas actuales (consultar_mis_apuntes + APUNTES), estructura real, puertos y comandos, sin referencias a evaluacion.md ni a rutas del equipo anterior. Geografía documenta su blueprint.md. El documento de entrega ya no usa APORTES_POR_DEFECTO (autoría colectiva) y valida el blueprint del segundo agente contra el archivo real. Notebooks finales ya ejecutados y sin cambios posteriores: a2a-test.ipynb 18/18 celdas con 0 errores y documento-entrega.ipynb 6/6 con 0 errores. Se creó grupo-4-taller-a2a.zip (38 entradas) con documento-entrega + log, blueprint.md raíz, plan.json, evidencia-captura-terminal-2025.png y los dos proyectos completos (src, tests, langgraph.json, pyproject, requirements, .env.example, notebooks/a2a-test.ipynb + run.log). Excluye .venv, .env, .langgraph_api, __pycache__, .pytest_cache y *.egg-info. Verificación del plan OK: están blueprint.md, documento-entrega.*, notebooks/a2a-test.ipynb, agente-profesor-geografia/blueprint.md y .env.example, y no hay segmentos prohibidos. Escaneo del zip: sin GOOGLE_API_KEY y sin entradas .env."
+    }
+  ]
+}
